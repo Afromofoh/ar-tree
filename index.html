@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Growing Tree AR</title>
+    <script src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.2/dist/mindar-face.prod.js"></script>
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.2/dist/mindar-face-aframe.prod.js"></script>
+    <style>
+        .button-container {
+            position: fixed;
+            bottom: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            z-index: 1000;
+        }
+        #waterButton {
+            padding: 15px 30px;
+            font-size: 18px;
+            background-color: #8c1515;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            display: none;
+        }
+        #prompt {
+            position: fixed;
+            top: 20px;
+            width: 100%;
+            text-align: center;
+            color: white;
+            font-size: 24px;
+            z-index: 1000;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="prompt">Would you like to water this seed?</div>
+    <div class="button-container">
+        <button id="waterButton">Water the Seed</button>
+    </div>
+    
+    <a-scene mindar-face embedded color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+        <a-camera active="false" position="0 0 0"></a-camera>
+        
+        <!-- Assets -->
+        <a-assets>
+            <a-asset-item id="treeModel" src="https://cdn.jsdelivr.net/gh/aframevr/sample-assets@master/assets/models/tree1/tree1.gltf"></a-asset-item>
+        </a-assets>
+
+        <!-- Face anchor -->
+        <a-entity mindar-face-target="anchorIndex: 1">
+            <!-- Seed (simple sphere to start) -->
+            <a-sphere id="seed" color="#8B4513" radius="0.1" position="0 -0.5 0" scale="0.1 0.1 0.1"></a-sphere>
+            
+            <!-- Tree (initially hidden) -->
+            <a-entity id="tree" gltf-model="#treeModel" position="0 -0.5 0" scale="0 0 0" visible="false">
+                <!-- Stanford logo as a plane above the tree -->
+                <a-image id="logo" src="stanford-logo.png" position="0 1 0" scale="0.5 0.5 0.5"></a-image>
+            </a-entity>
+        </a-entity>
+    </a-scene>
+
+    <script>
+        const seed = document.querySelector('#seed');
+        const tree = document.querySelector('#tree');
+        const prompt = document.querySelector('#prompt');
+        const waterButton = document.querySelector('#waterButton');
+
+        // Show prompt and button after face detection
+        document.querySelector('a-scene').addEventListener('targetFound', () => {
+            prompt.style.display = 'block';
+            waterButton.style.display = 'block';
+        });
+
+        document.querySelector('a-scene').addEventListener('targetLost', () => {
+            prompt.style.display = 'none';
+            waterButton.style.display = 'none';
+        });
+
+        // Handle water button click
+        waterButton.addEventListener('click', () => {
+            // Hide seed
+            seed.setAttribute('visible', 'false');
+            
+            // Show and animate tree growth
+            tree.setAttribute('visible', 'true');
+            let scale = 0;
+            const growInterval = setInterval(() => {
+                scale += 0.1;
+                tree.setAttribute('scale', `${scale} ${scale} ${scale}`);
+                if (scale >= 1) {
+                    clearInterval(growInterval);
+                    prompt.style.display = 'none';
+                    waterButton.style.display = 'none';
+                }
+            }, 100);
+        });
+    </script>
+</body>
+</html>
